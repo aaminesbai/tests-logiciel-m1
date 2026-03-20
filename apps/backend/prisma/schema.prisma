@@ -23,11 +23,16 @@ model User {
 
 model Card { 
   id        Int     @id @default(autoincrement()) 
-  title     String
-  content   String
-  category  String
-  imageUrl  String
-
+  // données Pokémon
+  cardId    String  // ex: "swsh3-136"
+  name      String
+  image     String
+  rarity    String
+  setId     String
+  setName   String
+  hp        Int
+  types     String
+  
   owner     User    @relation(fields: [ownerId], references: [id]) 
   ownerId   Int
 
