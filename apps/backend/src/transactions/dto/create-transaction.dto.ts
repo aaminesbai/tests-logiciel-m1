@@ -1,15 +1,15 @@
 import { IsInt, IsString, IsOptional } from 'class-validator';
-import { TransactionStatus } from '@prisma/client';
+import { TransactionStatus } from '../../../generated/prisma/enums';
 
 export class CreateTransactionDto {
   @IsString()
-  message: string;
+  message!: string;
 
   @IsInt()
-  senderId: number;
+  senderId!: number;
 
   @IsInt()
-  receiverId: number;
+  receiverId!: number;
 
   @IsOptional()
   status?: TransactionStatus;
