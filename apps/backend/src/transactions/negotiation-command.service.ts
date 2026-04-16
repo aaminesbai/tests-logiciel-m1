@@ -1,64 +1,81 @@
 import { Injectable } from '@nestjs/common';
+import { TransactionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateNegotiationCommentDto } from './dto/create-negotiation-comment.dto';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
-
-const TransactionStatus = {
-  PENDING: 'PENDING',
-  ACCEPTED: 'ACCEPTED',
-  REFUSED: 'REFUSED',
-} as const;
-
-type NegotiationStatus =
-  (typeof TransactionStatus)[keyof typeof TransactionStatus];
+import { transactionInclude } from './negotiation.include';
+import { NegotiationQueryService } from './negotiation-query.service';
 
 @Injectable()
 export class NegotiationCommandService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly queries: NegotiationQueryService,
+  ) {}
+
+  create(data: CreateTransactionDto) {
+    const { senderCardIds, receiverCardIds, status, ...transactionData } = data;
+
+    return this.prisma.transaction.create({
+      data: {
+        ...transactionData,
+        status,
+        senderCards: {
+          connect: senderCardIds.map((id) => ({ id })),
+        },
+        receiverCards: {
+          connect: receiverCardIds.map((id) => ({ id })),
+        },
+      },
+      include: transactionInclude,
+    });
+  }
 
   propose(data: CreateTransactionDto) {
-    return this.db.transaction.create({ data });
+    return this.create(data);
   }
 
-  addComment(transactionId: number, content: string) {
-    return this.db.comment.create({
+  update(id: number, data: UpdateTransactionDto) {
+    return this.prisma.transaction.update({
+      where: { id },
+      data,
+      include: transactionInclude,
+    });
+  }
+
+  counterPropose(id: number, data: UpdateTransactionDto) {
+    return this.update(id, {
+      ...data,
+      status: TransactionStatus.PENDING,
+    });
+  }
+
+  remove(id: number) {
+    return this.prisma.transaction.delete({ where: { id } });
+  }
+
+  async addComment(id: number, data: CreateNegotiationCommentDto | string) {
+    const content = typeof data === 'string' ? data.trim() : data.content.trim();
+    if (!content) {
+      return this.queries.findOne(id);
+    }
+
+    await this.prisma.comment.create({
       data: {
-        transactionId,
-        content: content.trim(),
+        transactionId: id,
+        content,
       },
     });
+
+    return this.queries.findOne(id);
   }
 
-  counterPropose(transactionId: number, data: UpdateTransactionDto) {
-    return this.db.transaction.update({
-      where: { id: transactionId },
-      data: {
-        ...data,
-        status: TransactionStatus.PENDING,
-      },
-    });
+  accept(id: number) {
+    return this.update(id, { status: TransactionStatus.ACCEPTED });
   }
 
-  accept(transactionId: number) {
-    return this.changeStatus(transactionId, TransactionStatus.ACCEPTED);
-  }
-
-  refuse(transactionId: number) {
-    return this.changeStatus(transactionId, TransactionStatus.REFUSED);
-  }
-
-  remove(transactionId: number) {
-    return this.db.transaction.delete({ where: { id: transactionId } });
-  }
-
-  private changeStatus(transactionId: number, status: NegotiationStatus) {
-    return this.db.transaction.update({
-      where: { id: transactionId },
-      data: { status },
-    });
-  }
-
-  private get db() {
-    return this.prisma as any;
+  refuse(id: number) {
+    return this.update(id, { status: TransactionStatus.REFUSED });
   }
 }

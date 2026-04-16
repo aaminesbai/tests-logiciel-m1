@@ -1,68 +1,54 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
   ParseIntPipe,
+  Patch,
+  Post,
 } from '@nestjs/common';
-import { TransactionsService } from './transactions.service';
+import { CreateNegotiationCommentDto } from './dto/create-negotiation-comment.dto';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
-import { CreateNegotiationCommentDto } from './dto/create-negotiation-comment.dto';
+import { NegotiationCommandService } from './negotiation-command.service';
+import { NegotiationQueryService } from './negotiation-query.service';
 
 @Controller('negotiations')
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(
+    private readonly commands: NegotiationCommandService,
+    private readonly queries: NegotiationQueryService,
+  ) {}
 
   @Post()
   create(@Body() dto: CreateTransactionDto) {
-    return this.transactionsService.create(dto);
+    return this.commands.create(dto);
   }
 
   @Get()
   findAll() {
-    return this.transactionsService.findAll();
+    return this.queries.findAll();
   }
 
   @Get('user/:userId')
   findByUser(@Param('userId', ParseIntPipe) userId: number) {
-    return this.transactionsService.findByUser(userId);
+    return this.queries.findByUser(userId);
   }
 
   @Get('object/:cardId')
   findByObject(@Param('cardId', ParseIntPipe) cardId: number) {
-    return this.transactionsService.findByObject(cardId);
-  }
-
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.transactionsService.findOne(id);
+    return this.queries.findByObject(cardId);
   }
 
   @Get(':id/history')
   history(@Param('id', ParseIntPipe) id: number) {
-    return this.transactionsService.history(id);
+    return this.queries.getHistory(id);
   }
 
-  @Post(':id/comments')
-  addComment(
-    @Param('id', ParseIntPipe) id: number,
-    @Body('content') content: string,
-  ) {
-    return this.transactionsService.addComment(id, content);
-  }
-
-  @Patch(':id/accept')
-  accept(@Param('id', ParseIntPipe) id: number) {
-    return this.transactionsService.accept(id);
-  }
-
-  @Patch(':id/refuse')
-  refuse(@Param('id', ParseIntPipe) id: number) {
-    return this.transactionsService.refuse(id);
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.queries.findOne(id);
   }
 
   @Patch(':id')
@@ -70,7 +56,7 @@ export class TransactionsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateTransactionDto,
   ) {
-    return this.transactionsService.update(id, dto);
+    return this.commands.update(id, dto);
   }
 
   @Post(':id/comments')
@@ -78,21 +64,21 @@ export class TransactionsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CreateNegotiationCommentDto,
   ) {
-    return this.transactionsService.addComment(id, dto);
+    return this.commands.addComment(id, dto);
   }
 
   @Patch(':id/accept')
   accept(@Param('id', ParseIntPipe) id: number) {
-    return this.transactionsService.accept(id);
+    return this.commands.accept(id);
   }
 
   @Patch(':id/refuse')
   refuse(@Param('id', ParseIntPipe) id: number) {
-    return this.transactionsService.refuse(id);
+    return this.commands.refuse(id);
   }
 
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.transactionsService.remove(id);
+    return this.commands.remove(id);
   }
 }
