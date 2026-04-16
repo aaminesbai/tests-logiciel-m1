@@ -4,7 +4,7 @@ import { transactionInclude } from './negotiation.include';
 
 @Injectable()
 export class NegotiationQueryService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   findAll() {
     return this.prisma.transaction.findMany({
@@ -24,6 +24,13 @@ export class NegotiationQueryService {
     }
 
     return transaction;
+  }
+
+  getHistory(transactionId: number) {
+    return this.prisma.comment.findMany({
+      where: { transactionId },
+      orderBy: { createdAt: 'asc' },
+    });
   }
 
   findByUser(userId: number) {
@@ -47,5 +54,9 @@ export class NegotiationQueryService {
       include: transactionInclude,
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  findByObject(cardId: number) {
+    return this.findByCard(cardId);
   }
 }
