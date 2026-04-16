@@ -8,28 +8,32 @@ import {
   Delete,
   ParseIntPipe,
 } from '@nestjs/common';
-import { TransactionsService } from './transactions.service';
+import { NegotiationCommandService } from './negotiation-command.service';
+import { NegotiationQueryService } from './negotiation-query.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { CreateNegotiationCommentDto } from './dto/create-negotiation-comment.dto';
 
 @Controller('negotiations')
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(
+    private readonly commands: NegotiationCommandService,
+    private readonly queries: NegotiationQueryService,
+  ) {}
 
   @Post()
   create(@Body() dto: CreateTransactionDto) {
-    return this.transactionsService.create(dto);
+    return this.commands.create(dto);
   }
 
   @Get()
   findAll() {
-    return this.transactionsService.findAll();
+    return this.queries.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.transactionsService.findOne(id);
+    return this.queries.findOne(id);
   }
 
   @Patch(':id')
@@ -37,7 +41,7 @@ export class TransactionsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateTransactionDto,
   ) {
-    return this.transactionsService.update(id, dto);
+    return this.commands.update(id, dto);
   }
 
   @Post(':id/comments')
@@ -45,21 +49,21 @@ export class TransactionsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CreateNegotiationCommentDto,
   ) {
-    return this.transactionsService.addComment(id, dto);
+    return this.commands.addComment(id, dto);
   }
 
   @Patch(':id/accept')
   accept(@Param('id', ParseIntPipe) id: number) {
-    return this.transactionsService.accept(id);
+    return this.commands.accept(id);
   }
 
   @Patch(':id/refuse')
   refuse(@Param('id', ParseIntPipe) id: number) {
-    return this.transactionsService.refuse(id);
+    return this.commands.refuse(id);
   }
 
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.transactionsService.remove(id);
+    return this.commands.remove(id);
   }
 }
