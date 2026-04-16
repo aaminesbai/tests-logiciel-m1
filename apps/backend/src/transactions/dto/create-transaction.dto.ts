@@ -3,13 +3,13 @@ import { TransactionStatus } from '@prisma/client';
 
 export class CreateTransactionDto {
   @IsString()
-  message: string;
+  message!: string;
 
   @IsInt()
-  senderId: number;
+  senderId!: number;
 
   @IsInt()
-  receiverId: number;
+  receiverId!: number;
 
   @IsOptional()
   status?: TransactionStatus;

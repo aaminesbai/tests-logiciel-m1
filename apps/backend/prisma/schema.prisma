@@ -2,69 +2,68 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
 }
 
-model User { 
-  id        Int      @id @default(autoincrement()) 
-  email     String   @unique
-  username  String
-  password  String
+model User {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  username String
+  password String
 
-  cards     Card[]
+  cards                Card[]
   sentTransactions     Transaction[] @relation("SentTransactions")
   receivedTransactions Transaction[] @relation("ReceivedTransactions")
-} 
+}
 
-model Card { 
-  id        Int     @id @default(autoincrement()) 
+model Card {
+  id      Int    @id @default(autoincrement())
   // données Pokémon
-  cardId    String  // ex: "swsh3-136"
-  name      String
-  image     String
-  rarity    String
-  setId     String
-  setName   String
-  hp        Int
-  types     String
-  
-  owner     User    @relation(fields: [ownerId], references: [id]) 
-  ownerId   Int
+  cardId  String // ex: "swsh3-136"
+  name    String
+  image   String
+  rarity  String
+  setId   String
+  setName String
+  hp      Int
+  types   String
+
+  owner   User @relation(fields: [ownerId], references: [id])
+  ownerId Int
 
   senderTransaction   Transaction? @relation("SenderCards", fields: [senderTransactionId], references: [id])
   senderTransactionId Int?
 
   receiverTransaction   Transaction? @relation("ReceiverCards", fields: [receiverTransactionId], references: [id])
   receiverTransactionId Int?
-} 
+}
 
 model Transaction {
-  id         Int      @id @default(autoincrement()) 
-  createdAt  DateTime @default(now())
-  status     TransactionStatus @default(PENDING)
-  message    String
+  id        Int               @id @default(autoincrement())
+  createdAt DateTime          @default(now())
+  status    TransactionStatus @default(PENDING)
+  message   String
 
-  sender     User     @relation("SentTransactions", fields: [senderId], references: [id])
-  senderId   Int
+  sender   User @relation("SentTransactions", fields: [senderId], references: [id])
+  senderId Int
 
-  receiver   User     @relation("ReceivedTransactions", fields: [receiverId], references: [id])
+  receiver   User @relation("ReceivedTransactions", fields: [receiverId], references: [id])
   receiverId Int
 
   senderCards   Card[] @relation("SenderCards")
   receiverCards Card[] @relation("ReceiverCards")
 
-  comments   Comment[]
+  comments Comment[]
 }
 
-model Comment { 
-  id            Int      @id @default(autoincrement()) 
-  content       String
-  createdAt     DateTime @default(now())
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
 
   transaction   Transaction @relation(fields: [transactionId], references: [id])
   transactionId Int
