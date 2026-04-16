@@ -1,29 +1,57 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { NegotiationCommandService } from './negotiation-command.service';
+import { NegotiationQueryService } from './negotiation-query.service';
 
 @Injectable()
 export class TransactionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly commands: NegotiationCommandService,
+    private readonly queries: NegotiationQueryService,
+  ) {}
 
   create(data: CreateTransactionDto) {
-    return this.prisma.transaction.create({ data });
+    return this.commands.propose(data);
   }
 
   findAll() {
-    return this.prisma.transaction.findMany();
+    return this.queries.findAll();
   }
 
   findOne(id: number) {
-    return this.prisma.transaction.findUnique({ where: { id } });
+    return this.queries.findOne(id);
   }
 
   update(id: number, data: UpdateTransactionDto) {
-    return this.prisma.transaction.update({ where: { id }, data });
+    return this.commands.counterPropose(id, data);
   }
 
   remove(id: number) {
-    return this.prisma.transaction.delete({ where: { id } });
+    return this.commands.remove(id);
+  }
+
+  accept(id: number) {
+    return this.commands.accept(id);
+  }
+
+  addComment(id: number, content: string) {
+    return this.commands.addComment(id, content);
+  }
+
+  refuse(id: number) {
+    return this.commands.refuse(id);
+  }
+
+  history(id: number) {
+    return this.queries.getHistory(id);
+  }
+
+  findByUser(userId: number) {
+    return this.queries.findByUser(userId);
+  }
+
+  findByObject(cardId: number) {
+    return this.queries.findByObject(cardId);
   }
 }
