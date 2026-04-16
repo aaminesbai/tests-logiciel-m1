@@ -1,19 +1,11 @@
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { fetchCardsByIds } from "../services/tcgdex";
-import { useTradeStore } from "../store/TradeStore";
+import { useTradeStore } from "../store/useTradeStore";
 
 function UsersPage() {
-  const { users, cards, cardsById, setCardsById, resolveCardForDisplay } = useTradeStore();
+  const { users, loading, error, isAuthenticated } = useTradeStore();
 
-  useEffect(() => {
-    const missingIds = cards.map((card) => card.tcgId).filter((id) => !cardsById[id]);
-    if (!missingIds.length) return;
-
-    fetchCardsByIds(missingIds).then((result) => {
-      setCardsById((prev) => ({ ...prev, ...result }));
-    });
-  }, [cards, cardsById, setCardsById]);
+  if (loading) return <p className="text-slate-600">Chargement du catalogue...</p>;
+  if (error) return <p className="rounded-xl bg-rose-50 p-4 text-rose-700">{error}</p>;
 
   return (
     <section className="space-y-6">
@@ -24,7 +16,7 @@ function UsersPage() {
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {users.map((user) => {
-          const ownCards = cards.filter((card) => card.ownerId === user.id).map(resolveCardForDisplay);
+          const ownCards = user.cards;
           return (
             <article key={user.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft">
               <div className="flex items-center gap-4">
@@ -55,9 +47,15 @@ function UsersPage() {
                 >
                   Voir profil
                 </Link>
-                <Link to="/trade/t1" className="flex-1 rounded-xl bg-ocean px-3 py-2 text-center text-sm font-semibold text-white">
-                  Negocier
-                </Link>
+                {isAuthenticated ? (
+                  <Link to="/trade/1" className="flex-1 rounded-xl bg-ocean px-3 py-2 text-center text-sm font-semibold text-white">
+                    Negocier
+                  </Link>
+                ) : (
+                  <Link to="/auth" className="flex-1 rounded-xl bg-slate-100 px-3 py-2 text-center text-sm font-semibold text-slate-700">
+                    Connexion
+                  </Link>
+                )}
               </div>
             </article>
           );
