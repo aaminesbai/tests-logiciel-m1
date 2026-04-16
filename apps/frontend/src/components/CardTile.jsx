@@ -10,7 +10,7 @@ function CardTile({ object, owner, selectable, selected, onToggle }) {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{object.category}</p>
         <h3 className="text-lg font-bold text-slate-900">{object.title}</h3>
         <p className="text-sm text-slate-600">{object.description}</p>
-        <p className="text-xs font-semibold text-slate-500">Proprietaire: {owner.name}</p>
+        <p className="text-xs font-semibold text-slate-500">Proprietaire: {owner?.name || "Inconnu"}</p>
         {selectable && (
           <button
             type="button"

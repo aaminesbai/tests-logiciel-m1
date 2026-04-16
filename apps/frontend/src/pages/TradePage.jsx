@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Navigate, useParams } from "react-router-dom";
 import CardTile from "../components/CardTile";
-import { fetchCardsByIds } from "../services/tcgdex";
-import { useTradeStore } from "../store/TradeStore";
+import { useTradeStore } from "../store/useTradeStore";
 
 function TradePage() {
   const { tradeId } = useParams();
@@ -10,13 +9,15 @@ function TradePage() {
     currentUserId,
     users,
     cards,
-    cardsById,
-    setCardsById,
     trades,
     setTradeStatus,
     addMessage,
     createTrade,
     resolveCardForDisplay,
+    loading,
+    error,
+    mutationPending,
+    isAuthenticated,
   } = useTradeStore();
 
   const [selectedMine, setSelectedMine] = useState([]);
@@ -24,15 +25,17 @@ function TradePage() {
   const [draftMessage, setDraftMessage] = useState("");
   const [replyText, setReplyText] = useState("");
 
-  const activeTrade = trades.find((trade) => trade.id === tradeId) || trades[0];
-  const fromUser = users.find((user) => user.id === activeTrade.fromUserId);
-  const toUser = users.find((user) => user.id === activeTrade.toUserId);
-  const otherUserId = currentUserId === toUser.id ? fromUser.id : toUser.id;
+  const activeTrade = trades.find((trade) => trade.id === Number(tradeId)) || trades[0];
+  const fromUser = users.find((user) => user.id === activeTrade?.fromUserId);
+  const toUser = users.find((user) => user.id === activeTrade?.toUserId);
+  const otherUserId = currentUserId === toUser?.id ? fromUser?.id : toUser?.id;
 
   const myCards = cards.filter((card) => card.ownerId === currentUserId).map(resolveCardForDisplay);
   const otherCards = cards.filter((card) => card.ownerId === otherUserId).map(resolveCardForDisplay);
 
   const exchangeCards = useMemo(() => {
+    if (!activeTrade) return { offered: [], requested: [] };
+
     const offered = activeTrade.offeredObjectIds
       .map((id) => cards.find((card) => card.id === id))
       .filter(Boolean)
@@ -42,30 +45,26 @@ function TradePage() {
       .filter(Boolean)
       .map(resolveCardForDisplay);
     return { offered, requested };
-  }, [activeTrade.offeredObjectIds, activeTrade.requestedObjectIds, cards, resolveCardForDisplay]);
+  }, [activeTrade, cards, resolveCardForDisplay]);
 
-  useEffect(() => {
-    const missingIds = cards.map((card) => card.tcgId).filter((id) => !cardsById[id]);
-    if (!missingIds.length) return;
-
-    fetchCardsByIds(missingIds).then((result) => {
-      setCardsById((prev) => ({ ...prev, ...result }));
-    });
-  }, [cards, cardsById, setCardsById]);
+  if (loading) return <p className="text-slate-600">Chargement de la negociation...</p>;
+  if (error) return <p className="rounded-xl bg-rose-50 p-4 text-rose-700">{error}</p>;
+  if (!isAuthenticated) return <Navigate to="/auth" replace />;
+  if (!activeTrade) return <p className="text-slate-600">Aucune negociation disponible.</p>;
 
   const toggleSelected = (setFn, current, id) => {
     setFn(current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id]);
   };
 
-  const submitOffer = () => {
-    if (!selectedMine.length || !selectedOther.length) return;
-    const newId = createTrade({
+  const submitOffer = async () => {
+    if (!selectedMine.length || !selectedOther.length || !otherUserId) return;
+    const newId = await createTrade({
       toUserId: otherUserId,
       offeredObjectIds: selectedMine,
       requestedObjectIds: selectedOther,
       message: draftMessage,
     });
-    setDraftMessage(`Nouvelle proposition creee (${newId.slice(0, 8)}).`);
+    setDraftMessage(`Nouvelle proposition creee (${String(newId).slice(0, 8)}).`);
     setSelectedMine([]);
     setSelectedOther([]);
   };
@@ -75,7 +74,7 @@ function TradePage() {
       <div>
         <h1 className="font-display text-5xl uppercase text-ocean">Echange & Negociation</h1>
         <p className="text-slate-600">
-          Transaction {activeTrade.id} entre {fromUser.name} et {toUser.name}
+          Transaction {activeTrade.id} entre {fromUser?.name} et {toUser?.name}
         </p>
       </div>
 
@@ -86,6 +85,7 @@ function TradePage() {
             <button
               type="button"
               onClick={() => setTradeStatus(activeTrade.id, "accepted")}
+              disabled={mutationPending}
               className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white"
             >
               Accepter
@@ -93,6 +93,7 @@ function TradePage() {
             <button
               type="button"
               onClick={() => setTradeStatus(activeTrade.id, "refused")}
+              disabled={mutationPending}
               className="rounded-lg bg-rose-600 px-3 py-2 text-sm font-semibold text-white"
             >
               Refuser
@@ -144,8 +145,9 @@ function TradePage() {
           />
           <button
             type="button"
-            onClick={() => {
-              addMessage(activeTrade.id, currentUserId, replyText);
+            disabled={mutationPending || !replyText.trim()}
+            onClick={async () => {
+              await addMessage(activeTrade.id, currentUserId, replyText);
               setReplyText("");
             }}
             className="rounded-xl bg-ink px-4 py-3 font-semibold text-white"
@@ -199,7 +201,12 @@ function TradePage() {
             placeholder="Message pour cette proposition"
             className="flex-1 rounded-xl border border-slate-300 px-4 py-3"
           />
-          <button type="button" onClick={submitOffer} className="rounded-xl bg-coral px-5 py-3 font-semibold text-white">
+          <button
+            type="button"
+            onClick={submitOffer}
+            disabled={mutationPending || !selectedMine.length || !selectedOther.length}
+            className="rounded-xl bg-coral px-5 py-3 font-semibold text-white disabled:opacity-50"
+          >
             Envoyer proposition
           </button>
         </div>
