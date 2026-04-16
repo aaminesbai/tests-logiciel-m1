@@ -32,10 +32,7 @@ export class CommentsController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateCommentDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateCommentDto) {
     return this.commentsService.update(id, dto);
   }
 
