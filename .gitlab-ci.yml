@@ -1,0 +1,29 @@
+include:
+  - local: '.gitlab/ci/backend.yml'
+  - local: '.gitlab/ci/frontend.yml'
+
+stages:
+  - scan
+  - lint
+  - test
+  # - build
+  # - deploy
+
+.rules:all:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+.rules:deploy-branches:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+.rules:develop:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+.rules:main:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
