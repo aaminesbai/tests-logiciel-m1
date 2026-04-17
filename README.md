@@ -34,6 +34,10 @@ npm run test:e2e -w backend
 npm run lint -w frontend
 ```
 
+The backend e2e suite includes load/concurrency checks for negotiations:
+- many concurrent proposals targeting the same cards must leave exactly one active negotiation;
+- many concurrent comments on the same negotiation must keep a complete history.
+
 ## Test account
 
 Email: `test@poketrade.dev`
