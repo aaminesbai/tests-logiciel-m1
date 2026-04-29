@@ -1,0 +1,41 @@
+.backend:rules:
+  rules:
+    - changes:
+        - backend/**/*
+        - .gitlab/ci/backend.yml
+        - .gitlab-ci.yml
+
+lint:backend:
+  stage: lint
+  image: node:20-alpine
+  extends: .backend:rules
+  cache:
+    key: "backend-deps-$CI_COMMIT_REF_SLUG"
+    paths:
+      - backend/node_modules/
+  script:
+    - echo "=== Lint Backend ==="
+    - cd apps/backend
+    - npm ci
+    - npm run lint
+
+test:unit:backend:
+  stage: test
+  image: node:20-alpine
+  cache:
+    key: "backend-deps-$CI_COMMIT_REF_SLUG"
+    paths:
+      - backend/node_modules/
+  script:
+    - cd apps/backend
+    - npm ci
+    - npx jest --ci
+  artifacts:
+    reports:
+      junit: apps/backend/junit.xml
+    expire_in: 1 week
+  rules:
+    - changes:
+        - backend/**/*
+        - .gitlab/ci/backend.yml
+        - .gitlab-ci.yml
