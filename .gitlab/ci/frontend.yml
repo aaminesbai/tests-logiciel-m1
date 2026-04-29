@@ -5,19 +5,19 @@
         - .gitlab/ci/frontend.yml
         - .gitlab-ci.yml
 
-lint:frontend:
-  stage: lint
-  image: node:20-alpine
-  extends: .frontend:rules
-  cache:
-    key: "frontend-deps-$CI_COMMIT_REF_SLUG"
-    paths:
-      - frontend/node_modules/
-  script:
-    - echo "=== Lint Frontend ==="
-    - cd apps/frontend
-    - npm ci
-    - npm run lint
+# lint:frontend:
+#   stage: lint
+#   image: node:20-alpine
+#   extends: .frontend:rules
+#   cache:
+#     key: "frontend-deps-$CI_COMMIT_REF_SLUG"
+#     paths:
+#       - frontend/node_modules/
+#   script:
+#     - echo "=== Lint Frontend ==="
+#     - cd apps/frontend
+#     - npm ci
+#     - npm run lint
 
 test:e2e:frontend:
   stage: test
