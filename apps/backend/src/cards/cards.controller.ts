@@ -32,10 +32,7 @@ export class CardsController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateCardDto,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateCardDto) {
     return this.cardsService.update(id, dto);
   }
 
