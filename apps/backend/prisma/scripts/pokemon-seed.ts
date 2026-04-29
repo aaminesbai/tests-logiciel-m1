@@ -1,83 +1,159 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 
-import TCGdex from '@tcgdex/sdk';
-
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL || 'file:./dev.db',
 });
 const prisma = new PrismaClient({ adapter });
-const tcgdex = new TCGdex('en');
 
-const cardIds = [
-  'xy12-1',
-  'xy12-2',
-  'xy1-1',
-  'g1-1',
-  'sm9-1',
-  'sm10-1',
-  'sm11-1',
-  'sm12-1',
-  'np-1',
-  'np-2',
-  'dp1-1',
-  'dp5-1',
-  'dp5-2',
-  'si1-1',
-  'pl4-1',
-  'pl3-1',
-  'base3-1',
-  'base3-2',
-  'gym1-1',
-  'gym2-1',
-  'col1-2',
-  'col1-3',
-  'hgss2-1',
-  'pop5-2',
-  'ecard1-1',
-  'ecard2-1',
-  'ex3-1',
-  'ex4-3',
-  'ex9-2',
-  'dp6-1',
-  'xy1-2',
-  'g1-2',
-  'sv07-001',
-  'B1-002',
-  'A1a-003',
-  'dp4-3',
-  'pop3-1',
-  'pop9-1',
-  'basep-3',
-  'lc-2',
-  'lc-3',
+const users = [
+  {
+    email: 'test@poketrade.dev',
+    username: 'Alice',
+    password: 'test',
+  },
+  {
+    email: 'bruno@poketrade.dev',
+    username: 'Bruno',
+    password: 'demo',
+  },
+  {
+    email: 'claire@poketrade.dev',
+    username: 'Claire',
+    password: 'demo',
+  },
+];
+
+const cards = [
+  {
+    cardId: 'swsh3-136',
+    name: 'Furret',
+    image: 'https://assets.tcgdex.net/en/swsh/swsh3/136/high.webp',
+    rarity: 'Uncommon',
+    setId: 'swsh3',
+    setName: 'Darkness Ablaze',
+    hp: 110,
+    types: 'Colorless',
+    ownerEmail: 'test@poketrade.dev',
+  },
+  {
+    cardId: 'swsh3-24',
+    name: 'Centiskorch',
+    image: 'https://assets.tcgdex.net/en/swsh/swsh3/24/high.webp',
+    rarity: 'Rare',
+    setId: 'swsh3',
+    setName: 'Darkness Ablaze',
+    hp: 130,
+    types: 'Fire',
+    ownerEmail: 'test@poketrade.dev',
+  },
+  {
+    cardId: 'swsh3-44',
+    name: 'Suicune',
+    image: 'https://assets.tcgdex.net/en/swsh/swsh3/44/high.webp',
+    rarity: 'Rare',
+    setId: 'swsh3',
+    setName: 'Darkness Ablaze',
+    hp: 110,
+    types: 'Water',
+    ownerEmail: 'bruno@poketrade.dev',
+  },
+  {
+    cardId: 'swsh3-13',
+    name: 'Butterfree V',
+    image: 'https://assets.tcgdex.net/en/swsh/swsh3/13/high.webp',
+    rarity: 'Ultra Rare',
+    setId: 'swsh3',
+    setName: 'Darkness Ablaze',
+    hp: 190,
+    types: 'Grass',
+    ownerEmail: 'bruno@poketrade.dev',
+  },
+  {
+    cardId: 'swsh3-146',
+    name: 'Piers',
+    image: 'https://assets.tcgdex.net/en/swsh/swsh3/146/high.webp',
+    rarity: 'Uncommon',
+    setId: 'swsh3',
+    setName: 'Darkness Ablaze',
+    hp: 0,
+    types: 'Trainer',
+    ownerEmail: 'claire@poketrade.dev',
+  },
+  {
+    cardId: 'swsh3-170',
+    name: 'Capture Energy',
+    image: 'https://assets.tcgdex.net/en/swsh/swsh3/170/high.webp',
+    rarity: 'Uncommon',
+    setId: 'swsh3',
+    setName: 'Darkness Ablaze',
+    hp: 0,
+    types: 'Energy',
+    ownerEmail: 'claire@poketrade.dev',
+  },
 ];
 
 async function main() {
-  for (const id of cardIds) {
-    try {
-      const card = await tcgdex.card.get(id);
-      if (!card) continue;
+  await prisma.comment.deleteMany();
+  await prisma.card.updateMany({
+    data: {
+      senderTransactionId: null,
+      receiverTransactionId: null,
+    },
+  });
+  await prisma.transaction.deleteMany();
+  await prisma.card.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.$executeRawUnsafe("DELETE FROM sqlite_sequence WHERE name IN ('User', 'Card', 'Transaction', 'Comment')");
 
-      await prisma.card.create({
-        data: {
-          cardId: card.id,
-          name: card.name,
-          image: card.image ? card.image + '/high.webp' : '',
-          rarity: card.rarity || 'Unknown',
-          setId: card.set?.id || 'unknown',
-          setName: card.set?.name || 'unknown',
-          hp: card.hp || 0,
-          types: card.types?.join(',') || '',
-          ownerId: 1,
-        },
-      });
-
-      console.log(`✅ Added ${card.name}`);
-    } catch (err) {
-      console.log(`❌ Error with ${id}`, err);
-    }
+  for (const user of users) {
+    await prisma.user.create({ data: user });
   }
+
+  for (const card of cards) {
+    const owner = await prisma.user.findUniqueOrThrow({
+      where: { email: card.ownerEmail },
+    });
+    const { ownerEmail, ...data } = card;
+    await prisma.card.create({
+      data: {
+        ...data,
+        ownerId: owner.id,
+      },
+    });
+  }
+
+  const alice = await prisma.user.findUniqueOrThrow({
+    where: { email: 'test@poketrade.dev' },
+  });
+  const bruno = await prisma.user.findUniqueOrThrow({
+    where: { email: 'bruno@poketrade.dev' },
+  });
+  const furret = await prisma.card.findFirstOrThrow({ where: { cardId: 'swsh3-136' } });
+  const centiskorch = await prisma.card.findFirstOrThrow({ where: { cardId: 'swsh3-24' } });
+  const suicune = await prisma.card.findFirstOrThrow({ where: { cardId: 'swsh3-44' } });
+
+  await prisma.transaction.create({
+    data: {
+      senderId: alice.id,
+      receiverId: bruno.id,
+      message: 'Salut, je te propose Furret + Centiskorch contre Suicune.',
+      senderCards: {
+        connect: [{ id: furret.id }, { id: centiskorch.id }],
+      },
+      receiverCards: {
+        connect: [{ id: suicune.id }],
+      },
+      comments: {
+        create: [
+          { content: 'Salut, je te propose Furret + Centiskorch contre Suicune.' },
+          { content: 'Interessant. Tu peux ajouter une carte energie ?' },
+        ],
+      },
+    },
+  });
+
+  console.log('Seeded 3 users, 6 cards and 1 negotiation.');
 }
 
 main().catch((err) => {
