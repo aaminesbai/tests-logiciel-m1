@@ -2,8 +2,8 @@ import { IsInt, IsString } from 'class-validator';
 
 export class CreateCommentDto {
   @IsString()
-  content: string;
+  content!: string;
 
   @IsInt()
-  transactionId: number;
+  transactionId!: number;
 }

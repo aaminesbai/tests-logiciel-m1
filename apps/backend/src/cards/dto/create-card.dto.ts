@@ -1,20 +1,32 @@
-import { IsInt, IsString, IsOptional, MinLength } from 'class-validator';
+import { IsInt, IsString, IsOptional } from 'class-validator';
 
 export class CreateCardDto {
   @IsString()
-  title: string;
+  cardId!: string;
 
   @IsString()
-  content: string;
+  name!: string;
 
   @IsString()
-  category: string;
+  image!: string;
 
   @IsString()
-  imageUrl: string;
+  rarity!: string;
+
+  @IsString()
+  setId!: string;
+
+  @IsString()
+  setName!: string;
 
   @IsInt()
-  ownerId: number;
+  hp!: number;
+
+  @IsString()
+  types!: string;
+
+  @IsInt()
+  ownerId!: number;
 
   @IsOptional()
   @IsInt()
