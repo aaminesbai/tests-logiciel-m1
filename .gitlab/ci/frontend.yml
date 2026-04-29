@@ -31,7 +31,7 @@ test:e2e:frontend:
       cat > .env.test.local << EOF
       EOF
     - npx playwright install chromium
-    - npx playwright test e2e/catalogue-negociation.spec.ts --reporter=list,html
+    - npx playwright test e2e/catalogue-negociation.spec.js --reporter=list,html
   artifacts:
     name: "e2e-report-$CI_COMMIT_SHORT_SHA"
     paths:
