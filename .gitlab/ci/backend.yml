@@ -63,4 +63,3 @@ test:e2e:backend:
     - changes:
         - backend/**/*
         - .gitlab/ci/backend.yml
-        - .gitlab-ci.yml
