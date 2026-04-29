@@ -1,4 +1,5 @@
-import { IsInt, IsString, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsInt, IsOptional, IsString } from 'class-validator';
 import { TransactionStatus } from '@prisma/client';
 
 export class CreateTransactionDto {
@@ -10,6 +11,16 @@ export class CreateTransactionDto {
 
   @IsInt()
   receiverId!: number;
+
+  @IsArray()
+  @IsInt({ each: true })
+  @Type(() => Number)
+  senderCardIds!: number[];
+
+  @IsArray()
+  @IsInt({ each: true })
+  @Type(() => Number)
+  receiverCardIds!: number[];
 
   @IsOptional()
   status?: TransactionStatus;
