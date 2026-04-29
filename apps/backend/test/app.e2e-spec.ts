@@ -135,6 +135,19 @@ function createPrismaMock() {
       }),
       delete: jest.fn().mockImplementation(() => negotiation),
     },
+    card: {
+      findMany: jest.fn().mockImplementation(({ where }) => {
+        const ids = where.id.in;
+        return usersSeed
+          .flatMap((user) => user.cards)
+          .filter((card) => ids.includes(card.id))
+          .map((card) => ({
+            ...card,
+            senderTransaction: null,
+            receiverTransaction: null,
+          }));
+      }),
+    },
     comment: {
       create: jest.fn().mockImplementation(({ data }) => {
         negotiation = {

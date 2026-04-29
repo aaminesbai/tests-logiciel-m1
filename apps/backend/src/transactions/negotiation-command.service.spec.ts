@@ -12,6 +12,9 @@ describe('NegotiationCommandService', () => {
       update: jest.Mock;
       delete: jest.Mock;
     };
+    card: {
+      findMany: jest.Mock;
+    };
     comment: {
       create: jest.Mock;
     };
@@ -26,6 +29,13 @@ describe('NegotiationCommandService', () => {
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
+      },
+      card: {
+        findMany: jest.fn().mockResolvedValue([
+          { id: 1, senderTransaction: null, receiverTransaction: null },
+          { id: 2, senderTransaction: null, receiverTransaction: null },
+          { id: 3, senderTransaction: null, receiverTransaction: null },
+        ]),
       },
       comment: {
         create: jest.fn(),
@@ -65,6 +75,40 @@ describe('NegotiationCommandService', () => {
       },
       include: transactionInclude,
     });
+    expect(prisma.card.findMany).toHaveBeenCalledWith({
+      where: { id: { in: [1, 2, 3] } },
+      include: {
+        senderTransaction: {
+          select: { id: true, status: true },
+        },
+        receiverTransaction: {
+          select: { id: true, status: true },
+        },
+      },
+    });
+  });
+
+  it('rejects proposals involving a card already in an active negotiation', async () => {
+    prisma.card.findMany.mockResolvedValue([
+      {
+        id: 1,
+        senderTransaction: { id: 99, status: TransactionStatus.PENDING },
+        receiverTransaction: null,
+      },
+      { id: 3, senderTransaction: null, receiverTransaction: null },
+    ]);
+
+    await expect(
+      service.create({
+        senderId: 1,
+        receiverId: 2,
+        senderCardIds: [1],
+        receiverCardIds: [3],
+        message: 'Trade?',
+      }),
+    ).rejects.toThrow('One or more cards are already in an active negotiation');
+
+    expect(prisma.transaction.create).not.toHaveBeenCalled();
   });
 
   it('adds a trimmed comment and reloads the negotiation', async () => {
