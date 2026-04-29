@@ -41,3 +41,25 @@ test:unit:backend:
         - backend/**/*
         - .gitlab/ci/backend.yml
         - .gitlab-ci.yml
+
+test:e2e:backend:
+  stage: test
+  image: node:20-alpine
+  cache:
+    key: "backend-deps-$CI_COMMIT_REF_SLUG"
+    paths:
+      - backend/node_modules/
+  script:
+    - cd apps/backend
+    - npm ci
+    - npx prisma generate
+    - DATABASE_URL="file:./dev.db" npx prisma migrate deploy
+    - npm run test:e2e
+  artifacts:
+    reports:
+      junit: apps/backend/junit.xml
+    expire_in: 1 week
+  rules:
+    - changes:
+        - backend/**/*
+        - .gitlab/ci/backend.yml
