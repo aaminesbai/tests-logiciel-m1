@@ -21,7 +21,10 @@ const transactionInclude = {
 
 @Injectable()
 export class TransactionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly commands: NegotiationCommandService,
+    private readonly queries: NegotiationQueryService,
+  ) {}
 
   create(data: CreateTransactionDto) {
     const { senderCardIds, receiverCardIds, status, ...transactionData } = data;
@@ -70,7 +73,31 @@ export class TransactionsService {
   }
 
   remove(id: number) {
-    return this.prisma.transaction.delete({ where: { id } });
+    return this.commands.remove(id);
+  }
+
+  accept(id: number) {
+    return this.commands.accept(id);
+  }
+
+  addComment(id: number, content: string) {
+    return this.commands.addComment(id, content);
+  }
+
+  refuse(id: number) {
+    return this.commands.refuse(id);
+  }
+
+  history(id: number) {
+    return this.queries.getHistory(id);
+  }
+
+  findByUser(userId: number) {
+    return this.queries.findByUser(userId);
+  }
+
+  findByObject(cardId: number) {
+    return this.queries.findByObject(cardId);
   }
 
   async addComment(id: number, data: CreateNegotiationCommentDto) {
