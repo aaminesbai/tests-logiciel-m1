@@ -31,7 +31,7 @@ test:unit:backend:
     - npm ci
     - npx prisma generate
     - DATABASE_URL="file:./dev.db" npx prisma migrate deploy
-    - npx jest --ci test/app.e2e-specs.ts
+    - npx jest --ci
   artifacts:
     reports:
       junit: apps/backend/junit.xml
@@ -42,7 +42,7 @@ test:unit:backend:
         - .gitlab/ci/backend.yml
         - .gitlab-ci.yml
 
-test:load:backend:
+test:e2e:backend:
   stage: test
   image: node:20-alpine
   cache:
@@ -54,7 +54,7 @@ test:load:backend:
     - npm ci
     - npx prisma generate
     - DATABASE_URL="file:./dev.db" npx prisma migrate deploy
-    - npx jest --ci test/negociation-load.e2e-specs.ts
+    - npm run test:e2e
   artifacts:
     reports:
       junit: apps/backend/junit.xml
