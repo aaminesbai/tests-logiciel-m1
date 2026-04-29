@@ -1,65 +1,62 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-
-const negotiationInclude = {
-  sender: true,
-  receiver: true,
-  senderCards: true,
-  receiverCards: true,
-  comments: {
-    orderBy: { createdAt: 'asc' },
-  },
-} as const;
+import { transactionInclude } from './negotiation.include';
 
 @Injectable()
 export class NegotiationQueryService {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll() {
-    return this.db.transaction.findMany({
-      include: negotiationInclude,
+    return this.prisma.transaction.findMany({
+      include: transactionInclude,
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  findOne(transactionId: number) {
-    return this.db.transaction.findUnique({
-      where: { id: transactionId },
-      include: negotiationInclude,
+  async findOne(id: number) {
+    const transaction = await this.prisma.transaction.findUnique({
+      where: { id },
+      include: transactionInclude,
     });
+
+    if (!transaction) {
+      throw new NotFoundException(`Negotiation ${id} not found`);
+    }
+
+    return transaction;
   }
 
   getHistory(transactionId: number) {
-    return this.db.comment.findMany({
+    return this.prisma.comment.findMany({
       where: { transactionId },
       orderBy: { createdAt: 'asc' },
     });
   }
 
   findByUser(userId: number) {
-    return this.db.transaction.findMany({
+    return this.prisma.transaction.findMany({
       where: {
         OR: [{ senderId: userId }, { receiverId: userId }],
       },
-      include: negotiationInclude,
+      include: transactionInclude,
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  findByObject(cardId: number) {
-    return this.db.transaction.findMany({
+  findByCard(cardId: number) {
+    return this.prisma.transaction.findMany({
       where: {
         OR: [
           { senderCards: { some: { id: cardId } } },
           { receiverCards: { some: { id: cardId } } },
         ],
       },
-      include: negotiationInclude,
+      include: transactionInclude,
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  private get db() {
-    return this.prisma as any;
+  findByObject(cardId: number) {
+    return this.findByCard(cardId);
   }
 }

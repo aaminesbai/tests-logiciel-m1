@@ -26,6 +26,14 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
+## Run tests
+
+```bash
+npm run test -w backend
+npm run test:e2e -w backend
+npm run lint -w frontend
+```
+
 ## Test account
 
 Email: `test@poketrade.dev`

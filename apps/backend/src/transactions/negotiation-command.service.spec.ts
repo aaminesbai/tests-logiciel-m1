@@ -1,15 +1,8 @@
-jest.mock('@prisma/client', () => ({
-  PrismaClient: class PrismaClient {},
-  TransactionStatus: {
-    PENDING: 'PENDING',
-    ACCEPTED: 'ACCEPTED',
-    REFUSED: 'REFUSED',
-  },
-}));
-
 import { TransactionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NegotiationCommandService } from './negotiation-command.service';
+import { transactionInclude } from './negotiation.include';
+import { NegotiationQueryService } from './negotiation-query.service';
 
 describe('NegotiationCommandService', () => {
   let service: NegotiationCommandService;
@@ -23,6 +16,9 @@ describe('NegotiationCommandService', () => {
       create: jest.Mock;
     };
   };
+  let queries: {
+    findOne: jest.Mock;
+  };
 
   beforeEach(() => {
     prisma = {
@@ -35,38 +31,69 @@ describe('NegotiationCommandService', () => {
         create: jest.fn(),
       },
     };
-
-    service = new NegotiationCommandService(prisma as unknown as PrismaService);
-  });
-
-  it('creates a negotiation proposal', async () => {
-    const dto = {
-      senderId: 1,
-      receiverId: 2,
-      message: 'Furret contre Suicune',
+    queries = {
+      findOne: jest.fn(),
     };
-    prisma.transaction.create.mockResolvedValue({ id: 10, ...dto });
-
-    await expect(service.propose(dto)).resolves.toMatchObject({ id: 10 });
-
-    expect(prisma.transaction.create).toHaveBeenCalledWith({ data: dto });
+    service = new NegotiationCommandService(
+      prisma as unknown as PrismaService,
+      queries as unknown as NegotiationQueryService,
+    );
   });
 
-  it('adds a trimmed comment to an existing negotiation', async () => {
-    prisma.comment.create.mockResolvedValue({
-      id: 3,
-      transactionId: 10,
-      content: 'Je peux ajouter une carte energie',
-    });
+  it('creates a proposal by connecting sender and receiver cards', async () => {
+    const created = { id: 10, status: TransactionStatus.PENDING };
+    prisma.transaction.create.mockResolvedValue(created);
 
-    await service.addComment(10, '  Je peux ajouter une carte energie  ');
+    await expect(
+      service.create({
+        senderId: 1,
+        receiverId: 2,
+        senderCardIds: [1, 2],
+        receiverCardIds: [3],
+        message: 'Trade?',
+      }),
+    ).resolves.toBe(created);
+
+    expect(prisma.transaction.create).toHaveBeenCalledWith({
+      data: {
+        senderId: 1,
+        receiverId: 2,
+        message: 'Trade?',
+        status: undefined,
+        senderCards: { connect: [{ id: 1 }, { id: 2 }] },
+        receiverCards: { connect: [{ id: 3 }] },
+      },
+      include: transactionInclude,
+    });
+  });
+
+  it('adds a trimmed comment and reloads the negotiation', async () => {
+    const refreshed = { id: 1, comments: [{ content: 'ok' }] };
+    queries.findOne.mockResolvedValue(refreshed);
+
+    await expect(
+      service.addComment(1, { content: '  ok  ' }),
+    ).resolves.toBe(refreshed);
 
     expect(prisma.comment.create).toHaveBeenCalledWith({
       data: {
-        transactionId: 10,
-        content: 'Je peux ajouter une carte energie',
+        transactionId: 1,
+        content: 'ok',
       },
     });
+    expect(queries.findOne).toHaveBeenCalledWith(1);
+  });
+
+  it('does not create a comment when content is blank', async () => {
+    const refreshed = { id: 1, comments: [] };
+    queries.findOne.mockResolvedValue(refreshed);
+
+    await expect(service.addComment(1, { content: '   ' })).resolves.toBe(
+      refreshed,
+    );
+
+    expect(prisma.comment.create).not.toHaveBeenCalled();
+    expect(queries.findOne).toHaveBeenCalledWith(1);
   });
 
   it('stores a counter-proposal and puts the negotiation back to pending', async () => {
@@ -78,24 +105,27 @@ describe('NegotiationCommandService', () => {
         message: 'Contre-proposition',
         status: TransactionStatus.PENDING,
       },
+      include: transactionInclude,
     });
   });
 
   it('accepts a negotiation', async () => {
-    await service.accept(10);
+    await service.accept(1);
 
     expect(prisma.transaction.update).toHaveBeenCalledWith({
-      where: { id: 10 },
+      where: { id: 1 },
       data: { status: TransactionStatus.ACCEPTED },
+      include: transactionInclude,
     });
   });
 
   it('refuses a negotiation', async () => {
-    await service.refuse(10);
+    await service.refuse(1);
 
     expect(prisma.transaction.update).toHaveBeenCalledWith({
-      where: { id: 10 },
+      where: { id: 1 },
       data: { status: TransactionStatus.REFUSED },
+      include: transactionInclude,
     });
   });
 });
