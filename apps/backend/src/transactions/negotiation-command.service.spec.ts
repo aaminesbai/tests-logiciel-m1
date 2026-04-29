@@ -1,8 +1,8 @@
 import { TransactionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NegotiationCommandService } from './negotiation-command.service';
-import { NegotiationQueryService } from './negotiation-query.service';
 import { transactionInclude } from './negotiation.include';
+import { NegotiationQueryService } from './negotiation-query.service';
 
 describe('NegotiationCommandService', () => {
   let service: NegotiationCommandService;
@@ -96,12 +96,20 @@ describe('NegotiationCommandService', () => {
     expect(queries.findOne).toHaveBeenCalledWith(1);
   });
 
-  it('accepts a negotiation', async () => {
-    prisma.transaction.update.mockResolvedValue({
-      id: 1,
-      status: TransactionStatus.ACCEPTED,
-    });
+  it('stores a counter-proposal and puts the negotiation back to pending', async () => {
+    await service.counterPropose(10, { message: 'Contre-proposition' });
 
+    expect(prisma.transaction.update).toHaveBeenCalledWith({
+      where: { id: 10 },
+      data: {
+        message: 'Contre-proposition',
+        status: TransactionStatus.PENDING,
+      },
+      include: transactionInclude,
+    });
+  });
+
+  it('accepts a negotiation', async () => {
     await service.accept(1);
 
     expect(prisma.transaction.update).toHaveBeenCalledWith({
@@ -112,11 +120,6 @@ describe('NegotiationCommandService', () => {
   });
 
   it('refuses a negotiation', async () => {
-    prisma.transaction.update.mockResolvedValue({
-      id: 1,
-      status: TransactionStatus.REFUSED,
-    });
-
     await service.refuse(1);
 
     expect(prisma.transaction.update).toHaveBeenCalledWith({

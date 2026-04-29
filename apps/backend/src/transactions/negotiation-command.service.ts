@@ -10,8 +10,8 @@ import { NegotiationQueryService } from './negotiation-query.service';
 @Injectable()
 export class NegotiationCommandService {
   constructor(
-    private prisma: PrismaService,
-    private queries: NegotiationQueryService,
+    private readonly prisma: PrismaService,
+    private readonly queries: NegotiationQueryService,
   ) {}
 
   create(data: CreateTransactionDto) {
@@ -32,6 +32,10 @@ export class NegotiationCommandService {
     });
   }
 
+  propose(data: CreateTransactionDto) {
+    return this.create(data);
+  }
+
   update(id: number, data: UpdateTransactionDto) {
     return this.prisma.transaction.update({
       where: { id },
@@ -40,12 +44,19 @@ export class NegotiationCommandService {
     });
   }
 
+  counterPropose(id: number, data: UpdateTransactionDto) {
+    return this.update(id, {
+      ...data,
+      status: TransactionStatus.PENDING,
+    });
+  }
+
   remove(id: number) {
     return this.prisma.transaction.delete({ where: { id } });
   }
 
-  async addComment(id: number, data: CreateNegotiationCommentDto) {
-    const content = data.content.trim();
+  async addComment(id: number, data: CreateNegotiationCommentDto | string) {
+    const content = typeof data === 'string' ? data.trim() : data.content.trim();
     if (!content) {
       return this.queries.findOne(id);
     }

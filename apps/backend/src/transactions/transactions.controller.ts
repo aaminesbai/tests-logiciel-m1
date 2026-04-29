@@ -1,18 +1,18 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
   ParseIntPipe,
+  Patch,
+  Post,
 } from '@nestjs/common';
-import { NegotiationCommandService } from './negotiation-command.service';
-import { NegotiationQueryService } from './negotiation-query.service';
+import { CreateNegotiationCommentDto } from './dto/create-negotiation-comment.dto';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
-import { CreateNegotiationCommentDto } from './dto/create-negotiation-comment.dto';
+import { NegotiationCommandService } from './negotiation-command.service';
+import { NegotiationQueryService } from './negotiation-query.service';
 
 @Controller('negotiations')
 export class TransactionsController {
@@ -29,6 +29,21 @@ export class TransactionsController {
   @Get()
   findAll() {
     return this.queries.findAll();
+  }
+
+  @Get('user/:userId')
+  findByUser(@Param('userId', ParseIntPipe) userId: number) {
+    return this.queries.findByUser(userId);
+  }
+
+  @Get('object/:cardId')
+  findByObject(@Param('cardId', ParseIntPipe) cardId: number) {
+    return this.queries.findByObject(cardId);
+  }
+
+  @Get(':id/history')
+  history(@Param('id', ParseIntPipe) id: number) {
+    return this.queries.getHistory(id);
   }
 
   @Get(':id')

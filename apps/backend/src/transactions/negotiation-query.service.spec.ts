@@ -10,6 +10,9 @@ describe('NegotiationQueryService', () => {
       findMany: jest.Mock;
       findUnique: jest.Mock;
     };
+    comment: {
+      findMany: jest.Mock;
+    };
   };
 
   beforeEach(() => {
@@ -17,6 +20,9 @@ describe('NegotiationQueryService', () => {
       transaction: {
         findMany: jest.fn(),
         findUnique: jest.fn(),
+      },
+      comment: {
+        findMany: jest.fn(),
       },
     };
     service = new NegotiationQueryService(prisma as unknown as PrismaService);
@@ -54,6 +60,15 @@ describe('NegotiationQueryService', () => {
     );
   });
 
+  it('reads a negotiation history in chronological order', async () => {
+    await service.getHistory(10);
+
+    expect(prisma.comment.findMany).toHaveBeenCalledWith({
+      where: { transactionId: 10 },
+      orderBy: { createdAt: 'asc' },
+    });
+  });
+
   it('reads negotiations by user as sender or receiver', async () => {
     await service.findByUser(1);
 
@@ -74,6 +89,21 @@ describe('NegotiationQueryService', () => {
         OR: [
           { senderCards: { some: { id: 3 } } },
           { receiverCards: { some: { id: 3 } } },
+        ],
+      },
+      include: transactionInclude,
+      orderBy: { createdAt: 'desc' },
+    });
+  });
+
+  it('keeps findByObject as an alias for object-oriented queries', async () => {
+    await service.findByObject(4);
+
+    expect(prisma.transaction.findMany).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { senderCards: { some: { id: 4 } } },
+          { receiverCards: { some: { id: 4 } } },
         ],
       },
       include: transactionInclude,
