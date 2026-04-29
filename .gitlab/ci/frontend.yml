@@ -1,0 +1,45 @@
+.frontend:rules:
+  rules:
+    - changes:
+        - frontend/**/*
+        - .gitlab/ci/frontend.yml
+        - .gitlab-ci.yml
+
+# lint:frontend:
+#   stage: lint
+#   image: node:20-alpine
+#   extends: .frontend:rules
+#   cache:
+#     key: "frontend-deps-$CI_COMMIT_REF_SLUG"
+#     paths:
+#       - frontend/node_modules/
+#   script:
+#     - echo "=== Lint Frontend ==="
+#     - cd apps/frontend
+#     - npm ci
+#     - npm run lint
+
+test:e2e:frontend:
+  stage: test
+  image: mcr.microsoft.com/playwright:v1.50.0-noble
+  variables:
+    CI: "true"
+  script:
+    - cd apps/frontend
+    - npm ci
+    - |
+      cat > .env.test.local << EOF
+      EOF
+    - npx playwright install chromium
+    - npx playwright test e2e/catalogue-negociation.spec.js --reporter=list,html
+  artifacts:
+    name: "e2e-report-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - apps/frontend/playwright-report/
+    when: always
+    expire_in: 1 week
+  rules:
+    - changes:
+        - frontend/**/*
+        - .gitlab/ci/frontend.yml
+        - .gitlab-ci.yml
