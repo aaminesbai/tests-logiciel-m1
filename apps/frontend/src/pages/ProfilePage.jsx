@@ -1,25 +1,21 @@
-import { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import CardTile from "../components/CardTile";
-import { fetchCardsByIds } from "../services/tcgdex";
-import { useTradeStore } from "../store/TradeStore";
+import { useTradeStore } from "../store/useTradeStore";
 
 function ProfilePage() {
   const { userId } = useParams();
-  const { currentUserId, users, cards, cardsById, setCardsById, resolveCardForDisplay } = useTradeStore();
+  const { currentUserId, users, loading, error, isAuthenticated } = useTradeStore();
 
-  const effectiveId = userId === "me" ? currentUserId : userId;
+  if (loading) return <p className="text-slate-600">Chargement du profil...</p>;
+  if (error) return <p className="rounded-xl bg-rose-50 p-4 text-rose-700">{error}</p>;
+
+  if (userId === "me" && !isAuthenticated) return <Navigate to="/auth" replace />;
+
+  const effectiveId = userId === "me" ? currentUserId : Number(userId);
   const user = users.find((entry) => entry.id === effectiveId) || users[0];
-  const userCards = cards.filter((card) => card.ownerId === user.id).map(resolveCardForDisplay);
+  if (!user) return <p className="text-slate-600">Profil introuvable.</p>;
 
-  useEffect(() => {
-    const missingIds = userCards.map((card) => card.tcgId).filter((id) => !cardsById[id]);
-    if (!missingIds.length) return;
-
-    fetchCardsByIds(missingIds).then((result) => {
-      setCardsById((prev) => ({ ...prev, ...result }));
-    });
-  }, [cardsById, setCardsById, userCards]);
+  const userCards = user?.cards || [];
 
   return (
     <section className="space-y-6">
@@ -33,8 +29,8 @@ function ProfilePage() {
             </p>
             <p className="mt-2 text-slate-600">{user.bio}</p>
           </div>
-          {user.id !== currentUserId && (
-            <Link to="/trade/t1" className="rounded-xl bg-coral px-4 py-3 font-semibold text-white">
+          {isAuthenticated && user.id !== currentUserId && (
+            <Link to="/trade/1" className="rounded-xl bg-coral px-4 py-3 font-semibold text-white">
               Proposer un echange
             </Link>
           )}
