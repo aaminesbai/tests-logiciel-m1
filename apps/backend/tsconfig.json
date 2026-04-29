@@ -4,6 +4,7 @@
     "module": "commonjs",
     // "moduleResolution": "bundler",
     // "resolvePackageJsonExports": true,
+    "moduleResolution": "Node",
     "esModuleInterop": true,
     "isolatedModules": true,
     "declaration": true,
