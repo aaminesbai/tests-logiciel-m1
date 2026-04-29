@@ -29,6 +29,7 @@ test:unit:backend:
   script:
     - cd apps/backend
     - npm ci
+    - DATABASE_URL="file:./dev.db" npx prisma migrate deploy
     - npx jest --ci
   artifacts:
     reports:
