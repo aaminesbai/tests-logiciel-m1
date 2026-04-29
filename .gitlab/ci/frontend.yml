@@ -22,12 +22,6 @@
 test:e2e:frontend:
   stage: test
   image: mcr.microsoft.com/playwright:v1.50.0-noble
-  services:
-    - name: $CI_REGISTRY_IMAGE/auth-service:$CI_COMMIT_REF_SLUG
-      alias: auth-service
-      variables:
-        DATABASE_URL: "sqlite:////tmp/db-e2e.db"
-        JWT_SECRET: "change-me"
   variables:
     CI: "true"
   script:
