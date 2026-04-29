@@ -1,12 +1,12 @@
-import { PrismaClient } from '../../generated/prisma/client';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
+import { PrismaClient } from '@prisma/client';
+// import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 
 import TCGdex from '@tcgdex/sdk';
 
-const connectionString = `${process.env.DATABASE_URL}`;
+// const connectionString = `${process.env.DATABASE_URL}`;
 
-const adapter = new PrismaBetterSqlite3({ url: connectionString });
-const prisma = new PrismaClient({ adapter });
+// const adapter = new PrismaBetterSqlite3({ url: connectionString });
+const prisma = new PrismaClient();
 const tcgdex = new TCGdex('en');
 
 const cardIds = [
