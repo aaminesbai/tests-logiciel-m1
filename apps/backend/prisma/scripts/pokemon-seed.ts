@@ -38,7 +38,7 @@ const cards = [
   },
   {
     cardId: 'swsh3-24',
-    name: 'Centiskorch',
+    name: 'Blaziken',
     image: 'https://assets.tcgdex.net/en/swsh/swsh3/24/high.webp',
     rarity: 'Rare',
     setId: 'swsh3',
@@ -49,7 +49,7 @@ const cards = [
   },
   {
     cardId: 'swsh3-44',
-    name: 'Suicune',
+    name: 'Darmanitan',
     image: 'https://assets.tcgdex.net/en/swsh/swsh3/44/high.webp',
     rarity: 'Rare',
     setId: 'swsh3',
@@ -60,7 +60,7 @@ const cards = [
   },
   {
     cardId: 'swsh3-13',
-    name: 'Butterfree V',
+    name: 'Decidueye',
     image: 'https://assets.tcgdex.net/en/swsh/swsh3/13/high.webp',
     rarity: 'Ultra Rare',
     setId: 'swsh3',
@@ -71,24 +71,24 @@ const cards = [
   },
   {
     cardId: 'swsh3-146',
-    name: 'Piers',
+    name: 'Staravia',
     image: 'https://assets.tcgdex.net/en/swsh/swsh3/146/high.webp',
     rarity: 'Uncommon',
     setId: 'swsh3',
     setName: 'Darkness Ablaze',
-    hp: 0,
-    types: 'Trainer',
+    hp: 80,
+    types: 'Normal',
     ownerEmail: 'claire@poketrade.dev',
   },
   {
     cardId: 'swsh3-170',
-    name: 'Capture Energy',
+    name: 'Spikemuth',
     image: 'https://assets.tcgdex.net/en/swsh/swsh3/170/high.webp',
     rarity: 'Uncommon',
     setId: 'swsh3',
     setName: 'Darkness Ablaze',
     hp: 0,
-    types: 'Energy',
+    types: 'Trainer',
     ownerEmail: 'claire@poketrade.dev',
   },
 ];
@@ -137,7 +137,7 @@ async function main() {
     data: {
       senderId: alice.id,
       receiverId: bruno.id,
-      message: 'Salut, je te propose Furret + Centiskorch contre Suicune.',
+      message: 'Salut, je te propose Furret + Blaziken contre Darmanitan.',
       senderCards: {
         connect: [{ id: furret.id }, { id: centiskorch.id }],
       },
@@ -146,8 +146,15 @@ async function main() {
       },
       comments: {
         create: [
-          { content: 'Salut, je te propose Furret + Centiskorch contre Suicune.' },
-          { content: 'Interessant. Tu peux ajouter une carte energie ?' },
+          {
+            content:
+              'Salut, je te propose Furret + Blaziken contre Darmanitan.',
+            userId: alice.id,
+          },
+          {
+            content: 'Interessant. Tu peux ajouter une carte energie ?',
+            userId: bruno.id,
+          },
         ],
       },
     },

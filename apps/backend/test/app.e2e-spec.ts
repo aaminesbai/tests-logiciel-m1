@@ -277,14 +277,14 @@ describe('Catalogue and negotiations functional flow (e2e)', () => {
   it('ignores blank comments and adds valid comments', async () => {
     const blank = await request(app.getHttpServer())
       .post('/negotiations/1/comments')
-      .send({ content: '   ' })
+      .send({ content: '   ', userId: 1 })
       .expect(201);
 
     expect(blank.body.comments).toHaveLength(1);
 
     const valid = await request(app.getHttpServer())
       .post('/negotiations/1/comments')
-      .send({ content: 'Je peux ajouter une energie.' })
+      .send({ content: 'Je peux ajouter une energie.', userId: 1 })
       .expect(201);
 
     expect(valid.body.comments).toHaveLength(2);

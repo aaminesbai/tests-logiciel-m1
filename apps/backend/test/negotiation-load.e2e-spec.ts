@@ -255,7 +255,7 @@ describe('Negotiation load and concurrent exchange consistency (e2e)', () => {
       Array.from({ length: comments }, (_, index) =>
         request(app.getHttpServer())
           .post(`/negotiations/${created.body.id}/comments`)
-          .send({ content: `load-comment-${index}` }),
+          .send({ content: `load-comment-${index}`, userId: 1 }),
       ),
     );
 

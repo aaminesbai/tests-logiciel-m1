@@ -14,7 +14,7 @@ export class NegotiationCommandService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly queries: NegotiationQueryService,
-  ) {}
+  ) { }
 
   create(data: CreateTransactionDto) {
     const { senderCardIds, receiverCardIds, status, ...transactionData } = data;
@@ -62,8 +62,8 @@ export class NegotiationCommandService {
     return this.prisma.transaction.delete({ where: { id } });
   }
 
-  async addComment(id: number, data: CreateNegotiationCommentDto | string) {
-    const content = typeof data === 'string' ? data.trim() : data.content.trim();
+  async addComment(id: number, data: CreateNegotiationCommentDto) {
+    const content = data.content.trim();
     if (!content) {
       return this.queries.findOne(id);
     }
@@ -72,6 +72,7 @@ export class NegotiationCommandService {
       data: {
         transactionId: id,
         content,
+        userId: data.userId,
       },
     });
 

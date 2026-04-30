@@ -59,7 +59,7 @@ function normalizeTrade(trade) {
     status: trade.status?.toLowerCase() || "pending",
     messages: (trade.comments || []).map((comment) => ({
       id: comment.id,
-      authorId: trade.senderId,
+      authorId: comment.userId,
       text: comment.content,
       createdAt: comment.createdAt,
     })),
@@ -162,11 +162,11 @@ export function TradeProvider({ children }) {
           setMutationPending(false);
         }
       },
-      addMessage: async (tradeId, _authorId, text) => {
+      addMessage: async (tradeId, authorId, text) => {
         if (!text.trim()) return;
         setMutationPending(true);
         try {
-          const updated = await api.addComment(tradeId, text.trim());
+          const updated = await api.addComment(tradeId, text.trim(), authorId);
           setTrades((prev) => prev.map((trade) => (trade.id === tradeId ? normalizeTrade(updated) : trade)));
         } finally {
           setMutationPending(false);
