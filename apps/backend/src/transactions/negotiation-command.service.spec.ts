@@ -116,13 +116,14 @@ describe('NegotiationCommandService', () => {
     queries.findOne.mockResolvedValue(refreshed);
 
     await expect(
-      service.addComment(1, { content: '  ok  ' }),
+      service.addComment(1, { content: '  ok  ', userId: 1 }),
     ).resolves.toBe(refreshed);
 
     expect(prisma.comment.create).toHaveBeenCalledWith({
       data: {
         transactionId: 1,
         content: 'ok',
+        userId: 1,
       },
     });
     expect(queries.findOne).toHaveBeenCalledWith(1);
@@ -132,7 +133,7 @@ describe('NegotiationCommandService', () => {
     const refreshed = { id: 1, comments: [] };
     queries.findOne.mockResolvedValue(refreshed);
 
-    await expect(service.addComment(1, { content: '   ' })).resolves.toBe(
+    await expect(service.addComment(1, { content: '   ', userId: 1 })).resolves.toBe(
       refreshed,
     );
 

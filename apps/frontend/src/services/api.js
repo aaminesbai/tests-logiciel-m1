@@ -36,10 +36,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  addComment: (id, content) =>
+  addComment: (id, content, userId) =>
     request(`/negotiations/${id}/comments`, {
       method: "POST",
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, userId }),
     }),
   acceptNegotiation: (id) =>
     request(`/negotiations/${id}/accept`, {

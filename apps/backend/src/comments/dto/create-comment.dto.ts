@@ -6,4 +6,7 @@ export class CreateCommentDto {
 
   @IsInt()
   transactionId!: number;
+
+  @IsInt()
+  userId!: number;
 }
